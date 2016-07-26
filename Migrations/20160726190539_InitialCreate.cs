@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace helloWorld.Migrations
+namespace RoomsToGo.FeedService.Migrations
 {
     public partial class InitialCreate : Migration
     {

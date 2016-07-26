@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace helloWorld.Migrations
+namespace RoomsToGo.FeedService.Migrations
 {
     [DbContext(typeof(FeedDataContext))]
     [Migration("20160726190539_InitialCreate")]

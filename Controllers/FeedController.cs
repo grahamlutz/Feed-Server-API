@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Dynamic.Core;
 
-namespace helloWorld.Controllers
+namespace RoomsToGo.FeedService.Controllers
 {
     // TODO: Learn to return proper HTTP Status Codes
     // TODO: Deploy
