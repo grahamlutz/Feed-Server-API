@@ -45,7 +45,7 @@ namespace RoomsToGo.FeedService.Controllers
             {
                 using(var db = new FeedDataContext())
                 {
-                    var log = new StringBuilder(); 
+                    var log = new StringBuilder();
                     try
                     {
                         db.Database.EnsureDeleted();
@@ -56,7 +56,7 @@ namespace RoomsToGo.FeedService.Controllers
                         for(int i = 1; i < result.Length; i++)
                         {
                             log.AppendLine("Processing " + result[i]);
-                            
+
                             var line = result[i].Split('\t');
                             if(line.Length <= 1)
                             {
@@ -66,13 +66,13 @@ namespace RoomsToGo.FeedService.Controllers
                             var item = new FeedItem();
                             for (int j = 0; j < columns.Length; j++)
                             {
-                                var columnName = columns[j];                            
+                                var columnName = columns[j];
                                 var columnValue = line[j];
 
                                 log.AppendLine("Setting value for column " + columnName + " to " + columnValue);
-                                
+
                                 var feedItemType = item.GetType();
-                                var feedItemProperty = feedItemType.GetProperty(columnName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance); 
+                                var feedItemProperty = feedItemType.GetProperty(columnName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
                                 if(feedItemProperty != null)
                                 {
                                     feedItemProperty.GetSetMethod().Invoke(item, new object[] { columnValue });
@@ -92,7 +92,7 @@ namespace RoomsToGo.FeedService.Controllers
                     }
                     catch (System.Exception ex)
                     {
-                        
+
                         return log.ToString() + "\n\n\n" + ex.Message;
                     }
                 }
@@ -106,7 +106,7 @@ namespace RoomsToGo.FeedService.Controllers
             // THIS WORKS!!! (brand%20%3D%20%22Rooms%20To%20Go%22)%20AND%20collection.Contains(%22Aber%22)
 
             IQueryable<FeedItem> result = GetDbData().AsQueryable();
-            
+
             if(!string.IsNullOrEmpty(booleanSearch))
             {
                 result = result.Where(booleanSearch);
@@ -154,6 +154,10 @@ namespace RoomsToGo.FeedService.Controllers
                     i.title.ContainsCaseInsensitive(textSearch)
                 );
             }
+
+            orderBy = string.IsNullOrEmpty(orderBy)
+                ? "id"
+                : orderBy;
 
             return result.OrderBy(orderBy).Take(limit).ToArray();
         }
