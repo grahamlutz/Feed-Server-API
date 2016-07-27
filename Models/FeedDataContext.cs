@@ -7,6 +7,6 @@ public class FeedDataContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlite("Filename=./feed.db");
+        optionsBuilder.UseSqlite("Filename=./db/feed.db");
     }
 }
