@@ -60,7 +60,8 @@ namespace RoomsToGo.FeedService.Controllers
         public async Task<string> Refresh()
         {
             var client = new HttpClient();
-            var result = (await client.GetStringAsync("http://storage1.merchantadvantage.com/macm2543/AllRegionProducts.txt"))
+            var result = (await client
+                .GetStringAsync("http://storage1.merchantadvantage.com/macm2543/AllRegionProducts.txt"))
                 .Split(System.Environment.NewLine.ToCharArray());
 
             lock(dbLock)
@@ -101,7 +102,7 @@ namespace RoomsToGo.FeedService.Controllers
                                 }else
                                 {
                                     log.AppendLine("Property not found: " + columnName);
-                                    throw new Exception("Property not found: " + columnName);
+                                    Debug.WriteLine("Property not found: " + columnName);
                                 }
                             }
 
