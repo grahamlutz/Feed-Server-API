@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Dynamic.Core;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace RoomsToGo.FeedService.Controllers
 {
@@ -20,15 +21,36 @@ namespace RoomsToGo.FeedService.Controllers
     [Route("api/[controller]")]
     public class FeedController : Controller
     {
-        public static object dbLock = new object();
+        private IMemoryCache cache;
+        private static object dbLock = new object();
+
+        public FeedController(IMemoryCache cache)
+        {
+            this.cache = cache;
+        }
 
         private FeedItem[] GetDbData()
         {
+            const string cacheKey = "FeedController.GetDbData";
+            var result = this.cache.Get(cacheKey) as FeedItem[];
+
+            if(result != null)
+            {
+                return result;
+            }
+
             lock(dbLock)
             {
                 using(var db = new FeedDataContext())
                 {
-                    return db.Items.AsQueryable().ToArray();
+                    result = db.Items.AsQueryable().ToArray();
+                    if(result.Length.Equals(0))
+                    {
+                        this.Refresh().Wait();
+                        result = db.Items.AsQueryable().ToArray();
+                    }
+
+                    return this.cache.Set(cacheKey, result, DateTimeOffset.Now.AddHours(1));
                 }
             }
         }

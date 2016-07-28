@@ -29,6 +29,7 @@ namespace RoomsToGo.FeedService
         {
             // Add framework services.
             services.AddMvc();
+            services.AddMemoryCache();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
