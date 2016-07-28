@@ -101,65 +101,68 @@ namespace RoomsToGo.FeedService.Controllers
 
         // GET api/values
         [HttpGet]
-        public FeedItem[] Get(string textSearch, string booleanSearch, string orderBy = "id", int limit = 50)
+        public FeedItem[] Get(string textSearch, string broadSearch, string booleanSearch, string orderBy = "id", int limit = 50)
         {
             // THIS WORKS!!! (brand%20%3D%20%22Rooms%20To%20Go%22)%20AND%20collection.Contains(%22Aber%22)
 
-            IQueryable<FeedItem> result = GetDbData().AsQueryable();
-
-            if(!string.IsNullOrEmpty(booleanSearch))
+            var result = GetDbData();
+            
+            if(limit > 1000)
             {
-                result = result.Where(booleanSearch);
-            }
-            if(!string.IsNullOrEmpty(textSearch))
-            {
-                result = result.Where(i =>
-                    i.additional_image_link.ContainsCaseInsensitive(textSearch) ||
-                    i.adwords_grouping.ContainsCaseInsensitive(textSearch) ||
-                    i.adwords_labels.ContainsCaseInsensitive(textSearch) ||
-                    i.additional_image_link.ContainsCaseInsensitive(textSearch) ||
-                    i.adwords_grouping.ContainsCaseInsensitive(textSearch) ||
-                    i.adwords_labels.ContainsCaseInsensitive(textSearch) ||
-                    i.age_group.ContainsCaseInsensitive(textSearch) ||
-                    i.availability.ContainsCaseInsensitive(textSearch) ||
-                    i.brand.ContainsCaseInsensitive(textSearch) ||
-                    i.collection.ContainsCaseInsensitive(textSearch) ||
-                    i.condition.ContainsCaseInsensitive(textSearch) ||
-                    i.custom_label_0.ContainsCaseInsensitive(textSearch) ||
-                    i.custom_label_1.ContainsCaseInsensitive(textSearch) ||
-                    i.custom_label_2.ContainsCaseInsensitive(textSearch) ||
-                    i.decor.ContainsCaseInsensitive(textSearch) ||
-                    i.description.ContainsCaseInsensitive(textSearch) ||
-                    i.expiration_date.ContainsCaseInsensitive(textSearch) ||
-                    i.gender.ContainsCaseInsensitive(textSearch) ||
-                    i.google_product_category.ContainsCaseInsensitive(textSearch) ||
-                    i.gtin.ContainsCaseInsensitive(textSearch) ||
-                    i.Id.ContainsCaseInsensitive(textSearch) ||
-                    i.identifier_exists.ContainsCaseInsensitive(textSearch) ||
-                    i.image_link.ContainsCaseInsensitive(textSearch) ||
-                    i.item_group_id.ContainsCaseInsensitive(textSearch) ||
-                    i.link.ContainsCaseInsensitive(textSearch) ||
-                    i.material.ContainsCaseInsensitive(textSearch) ||
-                    i.mobile_link.ContainsCaseInsensitive(textSearch) ||
-                    i.mpn.ContainsCaseInsensitive(textSearch) ||
-                    i.online_only.ContainsCaseInsensitive(textSearch) ||
-                    i.pattern.ContainsCaseInsensitive(textSearch) ||
-                    i.price.ContainsCaseInsensitive(textSearch) ||
-                    i.product_type.ContainsCaseInsensitive(textSearch) ||
-                    i.shipping.ContainsCaseInsensitive(textSearch) ||
-                    i.shipping_weight.ContainsCaseInsensitive(textSearch) ||
-                    i.size.ContainsCaseInsensitive(textSearch) ||
-                    i.style.ContainsCaseInsensitive(textSearch) ||
-                    i.tax.ContainsCaseInsensitive(textSearch) ||
-                    i.title.ContainsCaseInsensitive(textSearch)
-                );
+                limit = 1000;
             }
 
             orderBy = string.IsNullOrEmpty(orderBy)
                 ? "id"
                 : orderBy;
 
-            return result.OrderBy(orderBy).Take(limit).ToArray();
+            if(!string.IsNullOrWhiteSpace(booleanSearch))
+            {
+                result = result.AsQueryable().Where(booleanSearch.Trim()).ToArray();
+            }
+            if(!string.IsNullOrWhiteSpace(textSearch))
+            {
+                textSearch = textSearch.Trim();
+                result = result.AsQueryable().TextSearch(textSearch).ToArray();
+            }
+            if(!string.IsNullOrEmpty(broadSearch))
+            {
+                broadSearch = broadSearch.Trim();
+                var primaryResults = result.AsQueryable().TextSearch(broadSearch).OrderBy(orderBy).Take(limit).ToArray();
+                var secondaryResults = new List<FeedItem>();
+
+                var terms = broadSearch.Split(' ');
+
+                if(primaryResults.Length <= limit)
+                {
+                    var take = limit - primaryResults.Length;
+
+                    foreach (var term in terms)
+                    {
+                        var searchTerm = term.Trim();
+                        if(!string.IsNullOrWhiteSpace(searchTerm))
+                        {
+                            var resultSet = result.AsQueryable().TextSearch(searchTerm).OrderBy(orderBy).Take(take).ToArray();
+                            secondaryResults.AddRange(resultSet);
+                        }
+                    }
+
+                    var resultCount = primaryResults.Length + secondaryResults.Count;
+
+                    if(resultCount < limit)
+                    {
+                        limit = resultCount;
+                    }
+
+                    result = new FeedItem[limit];
+                    primaryResults.CopyTo(result, 0);
+                    secondaryResults.AsQueryable().OrderBy(orderBy).Take(take).ToArray().CopyTo(result, primaryResults.Length);
+                }
+
+                return result.ToArray();
+            }
+
+            return result.AsQueryable().OrderBy(orderBy).Take(limit).ToArray();
         }
     }
 }
