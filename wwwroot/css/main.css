@@ -19,3 +19,8 @@ button.btn.btn-success {
     overflow: auto;
     min-width: 110px;
 }
+
+.feed-refresh-container {
+    text-align: center;
+    padding: 10px 0;
+}
